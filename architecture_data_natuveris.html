@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Data Cible – Natuveris Box</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --vert-fonce: #1A4731;
+    --vert-moyen: #2D6A4F;
+    --vert-clair: #B7E4C7;
+    --vert-pale: #D8F3DC;
+    --bleu: #154360;
+    --bleu-clair: #AED6F1;
+    --orange: #784212;
+    --orange-clair: #FAE5D3;
+    --violet: #4A235A;
+    --violet-clair: #E8DAEF;
+    --gris: #2C3E50;
+    --gris-clair: #ECF0F1;
+    --blanc: #FFFFFF;
+    --jaune: #F39C12;
+    --rouge: #C0392B;
+    --fond: #F8F9FA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--fond);
+    color: var(--gris);
+    padding: 32px;
+    min-width: 1200px;
+  }
+
+  /* TITRE */
+  .header {
+    background: var(--vert-fonce);
+    color: white;
+    padding: 20px 28px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .header .subtitle {
+    font-size: 12px;
+    opacity: 0.75;
+    font-family: 'DM Mono', monospace;
+    margin-top: 4px;
+  }
+  .header .badge {
+    background: var(--vert-clair);
+    color: var(--vert-fonce);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* LAYOUT PRINCIPAL */
+  .diagram {
+    display: grid;
+    grid-template-columns: 200px 40px 1fr 40px 180px 40px 180px;
+    grid-template-rows: auto;
+    gap: 0;
+    align-items: start;
+  }
+
+  /* COLONNES */
+  .col-sources { grid-column: 1; }
+  .col-arrow1  { grid-column: 2; display: flex; align-items: center; justify-content: center; }
+  .col-lakehouse { grid-column: 3; }
+  .col-arrow2  { grid-column: 4; display: flex; align-items: center; justify-content: center; }
+  .col-cdp     { grid-column: 5; }
+  .col-arrow3  { grid-column: 6; display: flex; align-items: center; justify-content: center; }
+  .col-activation { grid-column: 7; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  /* BOÎTES SOURCES */
+  .sources-group {
+    border: 2px solid var(--vert-moyen);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sources-label {
+    background: var(--vert-moyen);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 7px 10px;
+    text-align: center;
+  }
+  .source-item {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .source-item:last-child { border-bottom: none; }
+  .source-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .source-info { flex: 1; }
+  .source-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gris);
+    line-height: 1.2;
+  }
+  .source-meta {
+    font-size: 9px;
+    color: #888;
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+  .score-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+  .score-high   { background: #D5F5E3; color: #1A5632; }
+  .score-medium { background: #FEF9E7; color: #784212; }
+  .score-low    { background: #FDEDEC; color: #C0392B; }
+
+  /* FLÈCHES */
+  .arrow-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
+  }
+  .arrow-label {
+    font-size: 8px;
+    color: #999;
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .arrow-svg { width: 32px; height: 20px; }
+
+  /* DATA LAKEHOUSE */
+  .lakehouse-box {
+    border: 2px solid var(--bleu);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 100%;
+  }
+  .lakehouse-header {
+    background: var(--bleu);
+    color: white;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lakehouse-zones {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: #ddd;
+    padding: 1px;
+  }
+  .zone {
+    background: white;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .zone-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+  .zone-raw    .zone-title { color: var(--rouge); }
+  .zone-clean  .zone-title { color: var(--jaune); }
+  .zone-curated .zone-title { color: var(--vert-moyen); }
+  .zone-desc {
+    font-size: 9px;
+    color: #666;
+    line-height: 1.5;
+  }
+  .zone-tag {
+    display: inline-block;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin: 2px 1px;
+    font-family: 'DM Mono', monospace;
+  }
+  .tag-raw     { background: #FDEDEC; color: var(--rouge); }
+  .tag-clean   { background: #FEF9E7; color: #784212; }
+  .tag-curated { background: var(--vert-pale); color: var(--vert-fonce); }
+
+  .lakehouse-governance {
+    background: #F0F4FF;
+    border-top: 1px solid #C8D6F5;
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .gov-item {
+    font-size: 9px;
+    color: var(--bleu);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .gov-icon { font-size: 14px; display: block; margin-bottom: 2px; }
+  .gov-label { font-weight: 600; display: block; }
+  .gov-desc { color: #666; }
+
+  .lakehouse-quality {
+    background: #FAFAFA;
+    border-top: 1px solid #eee;
+    padding: 8px 12px;
+  }
+  .quality-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+  .quality-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .quality-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+  }
+  .quality-name { width: 90px; color: #666; }
+  .quality-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .quality-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .quality-score { width: 28px; text-align: right; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--gris); }
+
+  /* CDP */
+  .cdp-box {
+    border: 2px solid var(--violet);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .cdp-header {
+    background: var(--violet);
+    color: white;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+  }
+  .cdp-body { background: white; padding: 10px; }
+  .cdp-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 10px;
+  }
+  .cdp-feature:last-child { border-bottom: none; }
+  .cdp-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--violet);
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .cdp-feat-name { font-weight: 600; color: var(--gris); line-height: 1.3; }
+  .cdp-feat-desc { font-size: 9px; color: #888; margin-top: 1px; line-height: 1.3; }
+  .cdp-rgpd {
+    background: var(--violet-clair);
+    padding: 7px 10px;
+    font-size: 9px;
+    color: var(--violet);
+    font-weight: 500;
+    text-align: center;
+    border-top: 1px solid #D7BDE2;
+  }
+
+  /* ACTIVATION */
+  .activation-box {
+    border: 2px solid var(--orange);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .activation-header {
+    background: var(--orange);
+    color: white;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    text-align: center;
+  }
+  .activation-item {
+    background: white;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+  }
+  .activation-item:last-child { border-bottom: none; }
+  .act-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .act-name { font-weight: 600; color: var(--gris); font-size: 10px; line-height: 1.2; }
+  .act-desc { font-size: 9px; color: #888; margin-top: 1px; }
+
+  /* LÉGENDE */
+  .legend {
+    margin-top: 20px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .legend-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #888;
+    margin-right: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gris);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* FAILLES */
+  .failles-section {
+    margin-top: 16px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .failles-header {
+    background: var(--rouge);
+    color: white;
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .failles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #eee;
+    padding: 1px;
+  }
+  .faille-item {
+    background: white;
+    padding: 10px 12px;
+  }
+  .faille-type {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--rouge);
+    margin-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .faille-desc {
+    font-size: 10px;
+    color: var(--gris);
+    line-height: 1.5;
+  }
+  .faille-impact {
+    font-size: 9px;
+    color: #888;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ACTIONS CIBLES */
+  .actions-section {
+    margin-top: 16px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .actions-header {
+    background: var(--vert-fonce);
+    color: white;
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #eee;
+    padding: 1px;
+  }
+  .action-item {
+    background: white;
+    padding: 10px 12px;
+  }
+  .action-pilier {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .pilier-unif   { color: var(--violet); }
+  .pilier-fiab   { color: var(--bleu); }
+  .pilier-gouv   { color: var(--vert-moyen); }
+  .pilier-rgpd   { color: var(--orange); }
+  .action-desc {
+    font-size: 10px;
+    color: var(--gris);
+    line-height: 1.5;
+  }
+  .action-delai {
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    margin-top: 5px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  .delai-t1 { background: #D5F5E3; color: #1A5632; }
+  .delai-t2 { background: #FEF9E7; color: #784212; }
+
+  .footnote {
+    margin-top: 14px;
+    font-size: 9px;
+    color: #aaa;
+    font-family: 'DM Mono', monospace;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<!-- EN-TÊTE -->
+<div class="header">
+  <div>
+    <div class="h1" style="font-size:17px;font-weight:600;color:white;">Architecture Data Cible – Natuveris Box</div>
+    <div class="subtitle">Annexe 11 · Bloc 3 · Dossier Conseil Marketing · Agence Horizon · 2025-2026</div>
+  </div>
+  <div class="badge">Score qualité cible ≥ 95/100</div>
+</div>
+
+<!-- DIAGRAMME PRINCIPAL -->
+<div class="diagram">
+
+  <!-- SOURCES -->
+  <div class="col-sources">
+    <div class="sources-group">
+      <div class="sources-label">Sources internes</div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#D5F5E3;">🗃️</div>
+        <div class="source-info">
+          <div class="source-name">CRM open-source</div>
+          <div class="source-meta">Batch nocturne → 4h cible</div>
+        </div>
+        <div class="score-badge score-high">92</div>
+      </div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#EBF5FB;">📱</div>
+        <div class="source-info">
+          <div class="source-name">PWA – 22 events</div>
+          <div class="source-meta">Streaming · latence 1h</div>
+        </div>
+        <div class="score-badge score-medium">89</div>
+      </div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#FDEDEC;">🎫</div>
+        <div class="source-info">
+          <div class="source-name">SAV – tickets</div>
+          <div class="source-meta">Fichiers → API cible · 24h→2h</div>
+        </div>
+        <div class="score-badge score-low">85</div>
+      </div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#F4ECF7;">🚚</div>
+        <div class="source-info">
+          <div class="source-name">ERP / Transporteurs</div>
+          <div class="source-meta">API · latence 6h</div>
+        </div>
+        <div class="score-badge score-low">80</div>
+      </div>
+    </div>
+    <div class="sources-group" style="margin-top:10px;">
+      <div class="sources-label" style="background:#555;border-color:#555;">Sources externes</div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#EBF5FB;">📊</div>
+        <div class="source-info">
+          <div class="source-name">Pixel Meta / GA</div>
+          <div class="source-meta">API · toutes 2h</div>
+        </div>
+        <div class="score-badge score-high">93</div>
+      </div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#FEF9E7;">🌿</div>
+        <div class="source-info">
+          <div class="source-name">Données ESG</div>
+          <div class="source-meta">Manuel → connecteur API cible</div>
+        </div>
+        <div class="score-badge score-low">—</div>
+      </div>
+      <div class="source-item">
+        <div class="source-icon" style="background:#F9F9F9;">📋</div>
+        <div class="source-info">
+          <div class="source-name">Études de marché</div>
+          <div class="source-meta">Import manuel ponctuel</div>
+        </div>
+        <div class="score-badge" style="background:#eee;color:#999;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLÈCHE 1 -->
+  <div class="col-arrow1" style="height:100%;">
+    <div class="arrow-line" style="height:100%;justify-content:center;">
+      <div class="arrow-label">Ingestion<br/>TLS 1.3</div>
+      <svg class="arrow-svg" viewBox="0 0 32 20">
+        <line x1="4" y1="10" x2="24" y2="10" stroke="#2D6A4F" stroke-width="2"/>
+        <polygon points="24,6 30,10 24,14" fill="#2D6A4F"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- DATA LAKEHOUSE -->
+  <div class="col-lakehouse">
+    <div class="lakehouse-box">
+      <div class="lakehouse-header">
+        🏛️ Data Lakehouse · Cloud souverain français
+      </div>
+      <div class="lakehouse-zones">
+        <div class="zone zone-raw">
+          <div class="zone-title">RAW</div>
+          <div class="zone-desc">Données brutes ingérées sans transformation</div>
+          <div style="margin-top:6px;">
+            <span class="zone-tag tag-raw">Non validées</span>
+            <span class="zone-tag tag-raw">Horodatées</span>
+          </div>
+        </div>
+        <div class="zone zone-clean">
+          <div class="zone-title">CLEAN</div>
+          <div class="zone-desc">Dédupliquées, validées, enrichies</div>
+          <div style="margin-top:6px;">
+            <span class="zone-tag tag-clean">Déduplication</span>
+            <span class="zone-tag tag-clean">UUID unifié</span>
+          </div>
+        </div>
+        <div class="zone zone-curated">
+          <div class="zone-title">CURATED</div>
+          <div class="zone-desc">Prêtes pour l'analytique et l'automation</div>
+          <div style="margin-top:6px;">
+            <span class="zone-tag tag-curated">Scoring</span>
+            <span class="zone-tag tag-curated">Segments</span>
+          </div>
+        </div>
+      </div>
+      <div class="lakehouse-governance">
+        <div class="gov-item">
+          <span class="gov-icon">📚</span>
+          <span class="gov-label">Catalogue data</span>
+          <span class="gov-desc">20 champs documentés base légale + durée</span>
+        </div>
+        <div class="gov-item">
+          <span class="gov-icon">🔐</span>
+          <span class="gov-label">Droits d'accès</span>
+          <span class="gov-desc">Matrice IAM dev vs prod par rôle</span>
+        </div>
+        <div class="gov-item">
+          <span class="gov-icon">🗑️</span>
+          <span class="gov-label">Purge auto</span>
+          <span class="gov-desc">Durées RGPD appliquées automatiquement</span>
+        </div>
+      </div>
+      <div class="lakehouse-quality">
+        <div class="quality-title">Score qualité des flux (cible ≥ 95/100)</div>
+        <div class="quality-bars">
+          <div class="quality-row">
+            <div class="quality-name">CRM</div>
+            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:92%;background:#27AE60;"></div></div>
+            <div class="quality-score">92</div>
+          </div>
+          <div class="quality-row">
+            <div class="quality-name">PWA – logs</div>
+            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:89%;background:#F39C12;"></div></div>
+            <div class="quality-score">89</div>
+          </div>
+          <div class="quality-row">
+            <div class="quality-name">SAV</div>
+            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:85%;background:#E67E22;"></div></div>
+            <div class="quality-score">85</div>
+          </div>
+          <div class="quality-row">
+            <div class="quality-name">Réseaux sociaux</div>
+            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:93%;background:#27AE60;"></div></div>
+            <div class="quality-score">93</div>
+          </div>
+          <div class="quality-row">
+            <div class="quality-name">Transporteurs</div>
+            <div class="quality-bar-bg"><div class="quality-bar-fill" style="width:80%;background:#C0392B;"></div></div>
+            <div class="quality-score">80</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLÈCHE 2 -->
+  <div class="col-arrow2" style="height:100%;">
+    <div class="arrow-line" style="height:100%;justify-content:center;">
+      <div class="arrow-label">UUID<br/>unifié</div>
+      <svg class="arrow-svg" viewBox="0 0 32 20">
+        <line x1="4" y1="10" x2="24" y2="10" stroke="#4A235A" stroke-width="2"/>
+        <polygon points="24,6 30,10 24,14" fill="#4A235A"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CDP -->
+  <div class="col-cdp">
+    <div class="cdp-box">
+      <div class="cdp-header">CDP Souveraine</div>
+      <div class="cdp-body">
+        <div class="cdp-feature">
+          <div class="cdp-dot"></div>
+          <div>
+            <div class="cdp-feat-name">Vue client unifiée</div>
+            <div class="cdp-feat-desc">UUID cross-sources CRM + PWA + SAV</div>
+          </div>
+        </div>
+        <div class="cdp-feature">
+          <div class="cdp-dot"></div>
+          <div>
+            <div class="cdp-feat-name">Scoring prédictif</div>
+            <div class="cdp-feat-desc">Churn, LTV, panier moyen</div>
+          </div>
+        </div>
+        <div class="cdp-feature">
+          <div class="cdp-dot"></div>
+          <div>
+            <div class="cdp-feat-name">Segmentation RGPD-ready</div>
+            <div class="cdp-feat-desc">Consentement vérifié avant activation</div>
+          </div>
+        </div>
+        <div class="cdp-feature">
+          <div class="cdp-dot"></div>
+          <div>
+            <div class="cdp-feat-name">Feature store IA</div>
+            <div class="cdp-feat-desc">Variables pour RecommAI & PredictX</div>
+          </div>
+        </div>
+        <div class="cdp-feature">
+          <div class="cdp-dot"></div>
+          <div>
+            <div class="cdp-feat-name">Chiffrement AES-256</div>
+            <div class="cdp-feat-desc">At-rest + TLS 1.3 en transit</div>
+          </div>
+        </div>
+      </div>
+      <div class="cdp-rgpd">🔒 Cloud français · DPA conforme · Droit à l'oubli automatisé</div>
+    </div>
+  </div>
+
+  <!-- FLÈCHE 3 -->
+  <div class="col-arrow3" style="height:100%;">
+    <div class="arrow-line" style="height:100%;justify-content:center;">
+      <div class="arrow-label">Activation<br/>temps réel</div>
+      <svg class="arrow-svg" viewBox="0 0 32 20">
+        <line x1="4" y1="10" x2="24" y2="10" stroke="#784212" stroke-width="2"/>
+        <polygon points="24,6 30,10 24,14" fill="#784212"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ACTIVATION -->
+  <div class="col-activation">
+    <div class="activation-box">
+      <div class="activation-header">Activation</div>
+      <div class="activation-item">
+        <div class="act-icon" style="background:#D5F5E3;">⚡</div>
+        <div>
+          <div class="act-name">Marketing automation</div>
+          <div class="act-desc">Séquences e-mail + SMS déclenchées par micro-comportements PWA</div>
+        </div>
+      </div>
+      <div class="activation-item">
+        <div class="act-icon" style="background:#EBF5FB;">🎯</div>
+        <div>
+          <div class="act-name">Campagnes Ads</div>
+          <div class="act-desc">Audiences lookalike Meta + Google Smart Bidding</div>
+        </div>
+      </div>
+      <div class="activation-item">
+        <div class="act-icon" style="background:#F4ECF7;">🤖</div>
+        <div>
+          <div class="act-name">RecommAI</div>
+          <div class="act-desc">Recommandations produit temps réel dans la PWA</div>
+        </div>
+      </div>
+      <div class="activation-item">
+        <div class="act-icon" style="background:#FEF9E7;">📊</div>
+        <div>
+          <div class="act-name">Dashboard exécutif</div>
+          <div class="act-desc">KPIs commerciaux + communication + ESG temps réel</div>
+        </div>
+      </div>
+      <div class="activation-item">
+        <div class="act-icon" style="background:#FDEDEC;">📱</div>
+        <div>
+          <div class="act-name">PWA personnalisée</div>
+          <div class="act-desc">Notifications push ciblées, dashboard impact abonné</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAILLES IDENTIFIÉES -->
+<div class="failles-section">
+  <div class="failles-header">⚠️ Failles identifiées – État actuel</div>
+  <div class="failles-grid">
+    <div class="faille-item">
+      <div class="faille-type">Doublons cross-sources</div>
+      <div class="faille-desc">2,1 % PWA · 0,8 % CRM. Identifiants divergents entre les deux systèmes.</div>
+      <div class="faille-impact">Impact : scores prédictifs fragmentés</div>
+    </div>
+    <div class="faille-item">
+      <div class="faille-type">Latence SAV critique</div>
+      <div class="faille-desc">24h de délai entre ticket créé et données disponibles dans le lakehouse.</div>
+      <div class="faille-impact">Impact : réengagement post-insatisfaction tardif</div>
+    </div>
+    <div class="faille-item">
+      <div class="faille-type">Consentement PWA partiel</div>
+      <div class="faille-desc">ip_address, cookie_id, device_id non systématiquement documentés (Annexe 9).</div>
+      <div class="faille-impact">Impact : risque CNIL, données exclues de l'automation</div>
+    </div>
+    <div class="faille-item">
+      <div class="faille-type">Protection transit non assurée</div>
+      <div class="faille-desc">Chiffrement TLS 1.3 non généralisé sur les flux API PWA → lakehouse.</div>
+      <div class="faille-impact">Impact : exposition données sensibles en transit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIONS ARCHITECTURE CIBLE -->
+<div class="actions-section">
+  <div class="actions-header">✅ Actions prioritaires – Architecture cible</div>
+  <div class="actions-grid">
+    <div class="action-item">
+      <div class="action-pilier pilier-unif">Unification</div>
+      <div class="action-desc">UUID client unifié via CDP. Déduplication déterministe email + nom + code postal.</div>
+      <span class="action-delai delai-t1">T1 2026</span>
+    </div>
+    <div class="action-item">
+      <div class="action-pilier pilier-fiab">Fiabilisation</div>
+      <div class="action-desc">Connecteur API temps réel SAV (24h → 2h). Connecteur ESG automatique. Micro-batch CRM 4h.</div>
+      <span class="action-delai delai-t1">T1–T2 2026</span>
+    </div>
+    <div class="action-item">
+      <div class="action-pilier pilier-gouv">Gouvernance</div>
+      <div class="action-desc">Catalogue data complet (20 champs). Matrice IAM dev/prod. Tableau de bord qualité mensuel ≥ 95/100.</div>
+      <span class="action-delai delai-t2">T2 2026</span>
+    </div>
+    <div class="action-item">
+      <div class="action-pilier pilier-rgpd">RGPD by design</div>
+      <div class="action-desc">Module CMP PWA. TLS 1.3 généralisé. Moteur de purge automatisée. Pseudonymisation après 3 ans.</div>
+      <span class="action-delai delai-t1">T1–T2 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- LÉGENDE -->
+<div class="legend">
+  <span class="legend-title">Légende</span>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--vert-moyen);"></div>Sources de données</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--bleu);"></div>Data Lakehouse (Raw / Clean / Curated)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--violet);"></div>CDP Souveraine (unification + conformité)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange);"></div>Canaux d'activation marketing</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--rouge);"></div>Failles à corriger</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#27AE60;"></div>Score qualité ≥ 90</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E67E22;"></div>Score qualité 85–89</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--rouge);"></div>Score qualité &lt; 85</div>
+</div>
+
+<div class="footnote">Source : Annexes 8, 9, 10 et 12 du sujet Bloc 3 · Agence Horizon · 2025-2026</div>
+
+</body>
+</html>
